@@ -44,7 +44,7 @@ async function main() {
     const result = await app.invoke({
         messages: [{
             role: 'user',
-            content: 'Schedule a meeting for me for 1 hour for today?'
+            content: 'Can you list all my Meetings for today?'
         }]
     })
 
