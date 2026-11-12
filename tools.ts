@@ -57,14 +57,42 @@ export const getEventTool = tool(
 )
 
 export const createEventTool = tool(
-    async () => {
+    async (eventData) => {
+        const { summary, description, start, end, attendees } = eventData
+
+        const response = await calendar.events.insert({
+            calendarId: 'primary',
+            sendUpdates: 'all',
+            requestBody: {
+                summary,
+                description,
+                start,
+                end,
+                attendees
+            },
+        })
+
+        console.log("response =====>", response)
+
         return 'The meeting has been created.';
     },
     {
         name: 'create-event',
         description: 'Call this tool to create the calendar events',
         schema: z.object({
-            'query': z.string().describe('The query to create the calendar event')
+            summary: z.string().describe('Title of the event'),
+            description: z.string().optional().describe('Description of the event'),
+            start: z.object({
+                dateTime: z.string().describe('Start date and time in UTC e.g. 2026-11-13T10:00:00Z'),
+                timeZone: z.string().optional().default('UTC').describe('Timezone e.g. UTC'),
+            }).describe('Start time of the event'),
+            end: z.object({
+                dateTime: z.string().describe('End date and time in UTC e.g. 2026-11-13T11:00:00Z'),
+                timeZone: z.string().optional().default('UTC').describe('Timezone e.g. UTC'),
+            }).describe('End time of the event'),
+            attendees: z.array(z.object({
+                email: z.string().describe('Email address of the attendee'),
+            })).optional().describe('List of attendees'),
         })
     }
 )
