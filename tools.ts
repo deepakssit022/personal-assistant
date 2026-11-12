@@ -12,24 +12,46 @@ oauth2Client.setCredentials(tokens)
 const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
 
 export const getEventTool = tool(
-    async () => {
+    async (params) => {
+
+        const { timeMin, timeMax, q } = params
+        console.log('params===>', params)
+
         try {
             const response = await calendar.events.list({
-                calendarId: 'deepak.sapient4@gmail.com'
+                calendarId: 'deepak.sapient4@gmail.com',
+                q: q,
+                timeMin: timeMin,
+                timeMax: timeMax
             })
-            console.log('response===>', response.data.items);
+
+            const events = response.data.items?.map(event => ({
+                title: event.summary ?? 'No Title',
+                description: event.description ?? '',
+                location: event.location ?? '',
+                start: event.start?.dateTime ?? event.start?.date ?? '',
+                end: event.end?.dateTime ?? event.end?.date ?? '',
+                organizer: event.organizer?.email ?? '',
+                attendees: event.attendees?.map(a => a.email) ?? [],
+                link: event.htmlLink ?? '',
+                status: event.status ?? '',
+            })) ?? [];
+
+            return JSON.stringify(events);
 
         } catch (err) {
-            console.log('ERRRRRR', err)
+            console.error('Error fetching calendar events:', err);
+            return JSON.stringify({ error: 'Failed to fetch calendar events' });
         }
-        return JSON.stringify([{ meeting: 'Deepak presentation', date: '2026-10-21', time: '10:00 AM', location: 'Google Meet' }]);
 
     },
     {
         name: 'get-events',
         description: 'Call this tool to get the calendar events',
         schema: z.object({
-            'query': z.string().describe('The query to get the calendar events')
+            timeMin: z.string().optional().describe('The minimum time to get the calendar events'),
+            timeMax: z.string().optional().describe('The maximum time to get the calendar events'),
+            q: z.string().optional().describe('The query to search from the calendar events')
         })
     }
 )
