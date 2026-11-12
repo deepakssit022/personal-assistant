@@ -63,18 +63,30 @@ export const createEventTool = tool(
         const response = await calendar.events.insert({
             calendarId: 'primary',
             sendUpdates: 'all',
+            conferenceDataVersion: 1,
             requestBody: {
                 summary,
                 description,
                 start,
                 end,
-                attendees
+                attendees,
+                conferenceData: {
+                    createRequest: {
+                        requestId: crypto.randomUUID(),
+                        conferenceSolutionKey: { type: 'hangoutsMeet' },
+                    },
+                },
             },
         })
 
         console.log("response =====>", response)
+        if (response.statusText == 'OK') {
+            const event = response.data;
+            return `Event created successfully: ${event.summary} and its meet link is ${event.conferenceData?.entryPoints?.[0]?.uri ?? 'N/A'}`;
+        } else {
+            return 'Failed to create the event.';
+        }
 
-        return 'The meeting has been created.';
     },
     {
         name: 'create-event',
